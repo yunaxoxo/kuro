@@ -1,0 +1,157 @@
+/* Perimeter header: one 48px bar, full bleed, one hairline under it. */
+.header {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 24px;
+  height: var(--header-h);
+  flex: none;
+  padding: 0 max(var(--pad-x), env(safe-area-inset-right)) 0 max(var(--pad-x), env(safe-area-inset-left));
+  border-bottom: 1px solid var(--hairline);
+}
+
+.brand { min-width: 0; align-self: center; margin-top: -1px; display: flex; align-items: baseline; gap: 12px; } /* baseline: "kuro" and the mode label are different fonts, so centring their boxes leaves their baselines ~2px apart; -1px: the 47px interior is odd, this lands the row on whole pixels */
+.wordmark {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-code);
+  font-weight: 500;
+  font-size: var(--fs-brand);
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+/* What kuro is, for a cold visitor: after a hairline tick, in the caption face. Read out at every size, shown from 1280. */
+.tagline {
+  position: relative;
+  padding-left: 12px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-label);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--label);
+  white-space: nowrap;
+}
+.tagline::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 14px; margin-top: -7px; background: var(--hairline); }
+@media (max-width: 1279px) {
+  .tagline { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+}
+
+.mark-logo { flex: none; display: block; width: max(14px, round(down, 0.875em, 14px)); height: auto; } /* the svg box is the mark's ink: its dots sit on the text baseline, the first one on the pane edge. It follows text size in whole multiples of its 14px grid (28px at 200%), so every pixel stays square. */
+
+/* Run mode, after a 14px hairline tick: a hollow datum for a replayed sample, solid ink when the Rust compiler ran. */
+.brand-mode {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-left: 12px;
+  font-size: var(--fs-label);
+  line-height: 1;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: color var(--morph);
+}
+.brand-mode::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 14px; margin-top: -7px; background: var(--hairline); }
+.mode-dot { flex: none; align-self: center; width: 6px; height: 6px; border: 1px solid var(--ink); transition: background-color var(--morph), border-color var(--morph); }
+.brand-mode[data-mode="live"] .mode-dot { background: var(--ink); border-color: var(--ink); }
+
+/* Sample tabs: the active one carries a 1px ink rule that sits on the header rule. */
+.samples { display: flex; align-items: stretch; gap: clamp(16px, 2vw, 28px); justify-self: center; }
+.sample {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--label);
+  transition: color var(--morph);
+  white-space: nowrap;
+}
+.sample::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--morph);
+}
+.sample-no { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: var(--fs-label); margin-right: 8px; }
+.sample[aria-pressed="true"] { color: var(--ink); }
+.sample[aria-pressed="true"]::after { transform: scaleX(1); }
+@media (hover: hover) and (pointer: fine) {
+  .sample:hover { color: var(--ink); }
+}
+
+/* Low-profile hardware trigger. */
+.run-zone { justify-self: end; align-self: center; }
+.run {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-line);
+  border-radius: 2px;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--ink);
+  transition: transform var(--morph), background-color var(--morph);
+  touch-action: manipulation;
+}
+/* Inline flow inside a centred box: the label and the keycap share the line's baseline instead of each centring its own box. */
+.run-label { display: block; line-height: 1; white-space: nowrap; }
+.run-short { display: none; }
+.run-keys { margin-left: 8px; font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: var(--fs-label); font-weight: 400; color: var(--label); }
+.run[aria-busy="true"] .run-keys { color: var(--ink); }
+.run:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .run:hover { background: var(--btn-hover); }
+}
+
+/* Mobile: mark, status dot and Run on one 48px line; the samples scroll sideways on a second line. */
+@media (max-width: 767px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: var(--header-h) calc(var(--hit) + 1px);
+    height: auto;
+    gap: 0;
+  }
+  .brand { grid-column: 1; grid-row: 1; }
+  .run-zone { grid-column: 2; grid-row: 1; }
+  .samples {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: stretch;
+    gap: 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 calc(var(--pad-x) * -1);
+    padding: 0 var(--pad-x);
+    border-top: 1px solid var(--hairline);
+  }
+  .samples::-webkit-scrollbar { display: none; }
+  .sample { flex: none; }
+  .run { height: var(--hit); padding: 0 18px; }
+  .run-full, .run-keys { display: none; }
+  .run-short { display: inline; }
+}
+
+/* A phone on its side: one 48px header row (samples between the brand and Run) gives the workspace back 45px. */
+@media (max-width: 767px) and (max-height: 560px) {
+  .header { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: var(--header-h); gap: 20px; }
+  .brand { grid-column: 1; }
+  .samples { grid-column: 2; grid-row: 1; justify-self: stretch; margin: 0; padding: 0; border-top: 0; }
+  .run-zone { grid-column: 3; }
+}
+
+/* Phones: the short tagline, so a cold visitor still learns what this is; the full one stays for screen readers. */
+.tagline-short { display: none; }
+@media (max-width: 767px) and (min-width: 380px) and (min-height: 561px) {
+  .tagline { position: relative; width: auto; height: auto; margin: 0; padding-left: 12px; overflow: visible; clip-path: none; }
+  .tagline-full { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+  .tagline-short { display: inline; }
+}

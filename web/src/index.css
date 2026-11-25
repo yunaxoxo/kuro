@@ -1,0 +1,76 @@
+/* kuro design tokens, in one place. Components read these and never carry a hex of their own.
+   Palette: matte carbon, bone ink, one vermilion. Vermilion is reserved for written memory, the span in focus and compiler errors. */
+
+:root {
+  /* Tactile matte carbon. Vermilion is reserved for written memory cells and compiler errors. */
+  --bg: #0b0b0c;
+  --line: #242428; /* axis, scrubber rail */
+  --hairline: #1e1e22; /* zone and strip separators */
+  --ink: #f0efea;
+  --label: #8a898e;
+  --signal: #ff453a;
+
+  --ink-soft: #c8c7cc; /* identifiers: quieter than keywords, still >10:1 */
+  --byte: var(--stone); /* payload bytes */
+  --lit: #d4d4d8; /* number and boolean literals */
+  --stone: #878689; /* quiet text: addresses, field names, operators, comments (4.5:1 on every row tint) */
+  --mark: #686770; /* non-text marks: peak-hold tick (3.5:1) */
+  --silver: #a1a1aa; /* identifiers and operators in the tree */
+  --row-rule: #141417;
+  --focus-wash: rgb(240 239 234 / 0.09); /* the span in focus: ink, so vermilion only ever means a write or a failure; 9% keeps Stone text at 4.5:1 */
+  --cursor-wash: rgb(255 69 58 / 0.22); /* hair-cursor through a written address */
+  --active-wash: rgb(240 239 234 / 0.08); /* active row or line */
+  --btn-line: #2a2a30;
+  --btn-bg: #141417;
+  --btn-hover: #1d1d22;
+  --wash: rgb(240 239 234 / 0.045); /* active-line band */
+
+  --font-code: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-data: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-ui: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Type ramp: a 12px floor for anything that carries information, in rem so text-size preferences apply */
+  --fs-label: 0.75rem;
+  --fs-code: 0.875rem;
+  --fs-brand: 1rem;
+
+  /* Structure */
+  --header-h: 3rem;
+  --status-h: 1.75rem;
+  --strip-h: 2.5rem; /* both pane strips: 40px including the hairline */
+  --row-h: 1.625rem;
+  --hit: 2.75rem; /* touch target */
+  --pulse-wash: rgb(240 239 234 / 0.22); /* the click-to-source flash: a 300ms step above the hover wash it settles onto */
+
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --morph: 120ms var(--ease);
+
+  --code-size: var(--fs-code);
+  --code-lh: 1.65;
+
+  --pad-x: round(nearest, clamp(20px, 3vw, 44px), 1px); /* whole pixels, so hairlines, the mark and the stems never land between two */
+}
+
+/* ---- 2px matte scrollbars ---------------------------------------------------------
+   A 2px visible thumb inside an 8px track: the bar stays a hairline, the grab area stays 8px.
+   Chromium and Safari take the pseudo-elements; Firefox takes the standard properties. */
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+@supports selector(::-webkit-scrollbar) {
+  * { scrollbar-width: auto; scrollbar-color: auto; }
+  *::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; }
+  *::-webkit-scrollbar-thumb { background: var(--line); background-clip: padding-box; border: 3px solid transparent; border-radius: 0; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--mark); background-clip: padding-box; }
+  *::-webkit-scrollbar-corner { background: transparent; }
+}
+
+/* ---- reduced motion ------------------------------------------------------------------
+   Fades stay, movement goes: colour and opacity still announce every state change, while transforms,
+   clip-paths and keyframe flashes snap. The click-to-source flash becomes a still highlight (editor.css). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-property: color, background-color, border-color, opacity !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

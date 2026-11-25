@@ -1,0 +1,415 @@
+/* ---- view tabs ---------------------------------------------------------- */
+.tabs { justify-content: flex-start; align-items: stretch; gap: 4px clamp(14px, 2vw, 28px); }
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  color: var(--label);
+  white-space: nowrap;
+  transition: color var(--morph);
+}
+.tab::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--morph);
+}
+.tab-no { font-family: var(--font-data); font-variant-numeric: tabular-nums; margin-right: 8px; }
+.tab[aria-selected="true"], .tab[aria-pressed="true"] { color: var(--ink); }
+.tab[aria-selected="true"]::after, .tab[aria-pressed="true"]::after { transform: scaleX(1); }
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover { color: var(--ink); }
+}
+
+.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 20px; overflow-x: hidden; overflow-y: auto; }
+
+/* ---- memory: segmented level-meter stems ------------------------------------ */
+.memory { flex: 1 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+.readout { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 24px; }
+.readout-title, .readout-step {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  font-weight: 400;
+  line-height: 1.5;
+}
+.readout-title { color: var(--label); letter-spacing: 0.12em; text-transform: uppercase; }
+.readout-step { color: var(--ink); letter-spacing: 0.02em; }
+/* A recorded trace standing in for edited code: said where the eye is, behind the same hollow datum as "Recorded Run". */
+.recorded-note { flex: none; display: flex; gap: 8px; font-family: var(--font-ui); font-size: var(--fs-label); line-height: 1.5; color: var(--ink); text-wrap: pretty; }
+.recorded-note::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: calc((1.5em - 6px) / 2); border: 1px solid var(--ink); animation: run-landed 360ms var(--ease); } /* centred on the first line */
+/* Re-keyed per run, so a re-run that changes nothing else still answers: the datum fills with ink, then empties. */
+@keyframes run-landed {
+  from { background-color: var(--ink); }
+}
+
+/* How to read the plot: three drawn swatches, in the caption face, under the stems. */
+.legend { display: flex; flex-wrap: wrap; gap: 4px 20px; font-family: var(--font-ui); font-size: var(--fs-label); line-height: 1.5; color: var(--label); }
+.legend-item { display: inline-flex; align-items: center; gap: 8px; }
+.swatch { flex: none; display: block; }
+.swatch-peak { width: 4px; height: 2px; background: var(--mark); }
+.swatch-dim { width: 3px; height: 10px; background: var(--ink); opacity: 0.38; -webkit-mask-image: repeating-linear-gradient(to top, var(--ink) 0 2px, transparent 2px 4px); mask-image: repeating-linear-gradient(to top, var(--ink) 0 2px, transparent 2px 4px); }
+.swatch-tick { width: 1px; height: 12px; background: var(--label); }
+
+/* The step in words, one line: what the scrubber shows as numbers. Full text in the tooltip and to screen readers. */
+.narration {
+  margin-top: -6px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  color: var(--label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plot {
+  --head: 1.5rem; /* room for the value above a stem */
+  --foot: 2.75rem; /* room for the address and slot name below the axis */
+  flex: 1;
+  min-height: 220px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* A program that never writes memory: one quiet line, same height, so switching samples never makes the layout jump. */
+.plot-empty { display: grid; place-items: center; padding: 0 1rem; }
+.plot-note { max-width: 40ch; font-family: var(--font-ui); font-size: var(--fs-label); line-height: 1.5; color: var(--label); text-align: center; text-wrap: balance; }
+
+.cells {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 100%;
+  min-width: min-content;
+}
+
+/* The continuous baseline every stem rises from. */
+.axis { position: absolute; left: 0; right: 0; bottom: var(--foot); height: 1px; background: var(--line); }
+
+.cell {
+  position: relative;
+  /* A whole-pixel share of the row, so every stem lands on the pixel grid. --n is the cell count, set inline. */
+  flex: 0 0 clamp(3.25rem, round(down, calc(100% / var(--n, 11)), 1px), 76px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* The track is the container every stem measure resolves against (cqh). */
+.track {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0; /* never a floor here: a track held up by min-height reads 0 for 100cqh in Chromium, and every stem draws full height. The plot carries the floor. */
+  margin-top: var(--head);
+  container-type: size;
+  /* Where the lit part of the stem ends, measured up from the axis. Snapped to the 4px period and pulled back 2px so the
+     top always lands on a lit segment (never a gap); the value label and the peak tick read the same number. */
+  --sx: round(down, calc(50% - 1.5px), 1px); /* the 3px stem's left edge: centred, then snapped down to a whole pixel */
+  --top: max(calc(round(down, calc(var(--v) * 100cqh), 4px) - 2px), var(--min));
+  --top-p: max(calc(round(down, calc(var(--p) * 100cqh), 4px) - 2px), var(--min-p));
+}
+
+/* Hardware-meter stem: 2px lit segments, 2px gaps, snapped to whole segments. */
+.stem {
+  position: absolute;
+  left: var(--sx);
+  bottom: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--ink);
+  -webkit-mask-image: repeating-linear-gradient(to top, var(--ink) 0 2px, transparent 2px 4px);
+  mask-image: repeating-linear-gradient(to top, var(--ink) 0 2px, transparent 2px 4px);
+  clip-path: inset(calc(100cqh - var(--top)) 0 0 0);
+  transition: clip-path var(--morph), background-color var(--morph);
+}
+.cell[data-changed] .stem { background: var(--signal); }
+
+/* Peak hold: where the value stood before this step. */
+.peak {
+  position: absolute;
+  left: calc(var(--sx) + 5px); /* 2px clear of the stem, the same as the gap between segments */
+  bottom: 0;
+  width: 4px;
+  height: 2px; /* one segment tall: a 1px tick vanished at desktop sizes */
+  background: var(--mark);
+  opacity: 0;
+  /* Sits on the old stem's top segment, level with where it ended. */
+  transform: translateY(calc(-1 * max(var(--top-p) - 2px, 0px)));
+  transition: transform var(--morph), opacity var(--morph);
+}
+.cell[data-changed] .peak { opacity: 1; }
+
+/* Scanline cursor on the active index. */
+.cursor {
+  position: absolute;
+  left: calc(var(--sx) + 1px); /* the stem's centre pixel */
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--cursor-wash);
+  opacity: 0;
+  transition: opacity var(--morph);
+}
+.cell[data-changed] .cursor { opacity: 1; }
+
+.value {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  line-height: 1rem;
+  color: var(--ink);
+  transform: translateY(calc(-1 * var(--top) - 8px));
+  transition: transform var(--morph), color var(--morph);
+  white-space: nowrap;
+}
+.cell[data-changed] .value { color: var(--signal); }
+
+.addr {
+  margin-top: 12px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  line-height: 1rem;
+  color: var(--stone);
+  transition: color var(--morph);
+}
+.cell[data-changed] .addr { color: var(--signal); }
+.role {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  line-height: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--stone);
+}
+
+/* Reserved slots (0x0000 to 0x0008) sit back; one tick marks where the array starts. */
+.cell[data-reserved]:not([data-changed]) .stem { opacity: 0.38; }
+.cell[data-reserved]:not([data-changed]) .value { color: var(--label); }
+.cell[data-divider]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+/* ---- scrubber ------------------------------------------------------------ */
+.scrubber { flex: none; display: flex; align-items: center; gap: 20px; }
+.transport { flex: none; display: flex; align-items: center; gap: 4px; }
+
+.ctl {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--label);
+  line-height: 1;
+  transition: transform var(--morph), color var(--morph);
+  touch-action: manipulation;
+}
+.ctl svg { display: block; }
+.ctl-play { color: var(--ink); }
+.ctl:active:not(:disabled) { transform: scale(0.97); }
+.ctl:disabled { opacity: 0.4; }
+@media (hover: hover) and (pointer: fine) {
+  .ctl-step:hover:not(:disabled) { color: var(--ink); }
+}
+
+/* Step counter: on the transport's 28px line, tabular so the digits never shift as the step advances. */
+.step-readout {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.track-line {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  --h: 28px; /* the control height: rail and ticks centre on it */
+  height: var(--h);
+  margin: 0 8px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+.track-line[aria-disabled="true"] { cursor: default; opacity: 0.6; }
+.rail, .rail-done {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--h) / 2);
+  height: 1px;
+}
+.rail { background: var(--line); }
+.rail-done { background: var(--ink); transform: scaleX(var(--done, 0)); transform-origin: left; transition: transform var(--morph); }
+
+/* Impulse ticks: tall means memory was written on that step. */
+.mark {
+  position: absolute;
+  bottom: calc(var(--h) / 2 - 10px);
+  width: 1px;
+  height: 20px;
+  background: var(--label);
+  opacity: 0.6;
+  transform: scaleY(0.3);
+  transform-origin: center;
+  transition: transform var(--morph), background-color var(--morph), opacity var(--morph);
+}
+.mark[data-writes] { transform: scaleY(0.7); }
+.mark[data-past] { background: var(--ink); opacity: 1; }
+.mark[data-hover] { transform: scaleY(0.9); background: var(--ink); opacity: 1; }
+.mark[data-current] { width: 2px; margin-left: -1px; transform: scaleY(1); background: var(--ink); opacity: 1; }
+
+.peek {
+  position: absolute;
+  top: -16px;
+  transform: translateX(-50%);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+/* Touch: 44px targets on the transport and the timeline, on coarse pointers and on phones. */
+@media (pointer: coarse), (max-width: 767px) {
+  .ctl { width: var(--hit); height: var(--hit); }
+  .track-line { --h: var(--hit); }
+  .scrubber { gap: 8px; }
+  .transport { gap: 8px; }
+}
+/* Phones: the timeline takes its own full-width line under the transport, so 47 ticks never crowd into 80px. */
+@media (max-width: 767px) {
+  .scrubber { flex-wrap: wrap; column-gap: 16px; }
+  .track-line { flex: 1 0 100%; margin: 0; }
+}
+@media (pointer: coarse) {
+  .tab { min-height: var(--hit); }
+}
+
+/* ---- stdout --------------------------------------------------------------- */
+.stdout {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  min-width: 0;
+}
+.stdout-label {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: var(--fs-label);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--label);
+}
+.stdout-count { margin-left: 8px; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink); }
+.stdout-lines {
+  position: relative; /* the offset parent its scroll maths reads */
+  display: flex;
+  gap: 18px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.stdout-lines::-webkit-scrollbar { display: none; }
+.stdout-line {
+  flex: none;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-label);
+  color: var(--ink);
+  transition: color var(--morph);
+}
+/* Not printed yet: an empty slot the width of the value, so the strip fills in as the run goes instead of giving away the end. */
+.stdout-line[data-pending] { color: transparent; background: linear-gradient(var(--line), var(--line)) left bottom / 100% 1px no-repeat; }
+/* The value the current step just printed: an ink rule under it, so the strip reads as a timeline. */
+.stdout-line[data-latest] { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+
+@media (max-width: 1023px) {
+  .plot { min-height: calc(var(--head) + 120px + var(--foot)); } /* room for a 120px track between the value and the address */
+}
+
+/* Phones: the cells run past the pane edges. A fade on each edge says there is more that way: the right one lifts as you
+   reach the end, the left one appears once you have scrolled away from the start (the plot follows writes on its own). */
+@property --plot-fade {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 32px;
+}
+@property --plot-fade-l {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@media (max-width: 767px) {
+  .plot { scrollbar-width: none; } /* the edge fades say there is more; a grey bar under the axis only adds noise */
+  .plot::-webkit-scrollbar { display: none; }
+  .plot:not(.plot-empty) {
+    -webkit-mask-image: linear-gradient(to right, transparent, var(--ink) var(--plot-fade-l), var(--ink) calc(100% - var(--plot-fade)), transparent);
+    mask-image: linear-gradient(to right, transparent, var(--ink) var(--plot-fade-l), var(--ink) calc(100% - var(--plot-fade)), transparent);
+  }
+  @supports (animation-timeline: scroll()) {
+    .plot:not(.plot-empty) {
+      animation: plot-start linear both, plot-end linear both;
+      animation-timeline: scroll(self inline), scroll(self inline);
+      animation-range: 0 32px, calc(100% - 32px) 100%;
+      animation-duration: auto !important; /* scroll-linked, so the reduced-motion duration override must not apply */
+    }
+  }
+}
+@keyframes plot-start {
+  to { --plot-fade-l: 32px; }
+}
+@keyframes plot-end {
+  to { --plot-fade: 0px; }
+}
+
+/* Short viewports (a phone on its side, at any width): the stems shorten so the scrubber and STDOUT stay on screen,
+   and every label keeps its size. Lives here, not in base.css, because this file loads later and would override it. */
+@media (max-height: 560px) {
+  .panel { gap: 10px; }
+  .memory { gap: 8px; }
+  .stdout { margin-top: 8px; padding-top: 8px; }
+  .narration, .legend { display: none; } /* the readout still names the step; the stems keep the height */
+  .plot { min-height: calc(var(--head) + 32px + var(--foot)); } /* 8 lit segments at the least: enough to compare values, and a 360px-tall phone on its side still fits */
+}
+
+/* A phone on its side has the width for the timeline beside the transport; keeping it inline saves a 44px line. */
+@media (max-width: 767px) and (max-height: 560px) {
+  .scrubber { flex-wrap: nowrap; }
+  .track-line { flex: 1; margin: 0 8px; }
+}

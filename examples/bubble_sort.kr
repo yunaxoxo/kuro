@@ -1,0 +1,53 @@
+// In-Place Bubble Sort.
+//
+// Sorts an int[] that lives in WebAssembly linear memory, swapping elements
+// with `a[i] = value` (i32.store) and reading them with `a[i]` (i32.load).
+//
+// Each pass prints how many swaps it made. In the playground every print
+// also checkpoints linear memory, so the Memory tab's timeline lets you step
+// through the passes and watch the large values sink to the end.
+
+fn bubble_sort(a: int[]) -> int {
+    let n = len(a);
+    let total = 0;
+    let pass = 0;
+    while pass < n - 1 {
+        let swaps = 0;
+        let j = 0;
+        while j < n - 1 - pass {
+            if a[j] > a[j + 1] {
+                let tmp = a[j];
+                a[j] = a[j + 1];
+                a[j + 1] = tmp;
+                swaps = swaps + 1;
+            }
+            j = j + 1;
+        }
+        print_int(swaps);
+        total = total + swaps;
+        pass = pass + 1;
+    }
+    return total;
+}
+
+fn main() -> int {
+    let a: int[] = alloc(8);
+    a[0] = 64;
+    a[1] = 34;
+    a[2] = 25;
+    a[3] = 12;
+    a[4] = 22;
+    a[5] = 11;
+    a[6] = 90;
+    a[7] = 5;
+
+    let swaps = bubble_sort(a);
+
+    // Print the sorted array.
+    let i = 0;
+    while i < len(a) {
+        print_int(a[i]);
+        i = i + 1;
+    }
+    return swaps;
+}

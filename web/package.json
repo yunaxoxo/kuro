@@ -1,0 +1,29 @@
+{
+  "name": "kuro-playground",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "wasm": "wasm-pack build ../compiler --target web --dev --out-dir ../web/public/pkg --out-name kuro",
+    "wasm:release": "wasm-pack build ../compiler --target web --release --out-dir ../web/public/pkg --out-name kuro",
+    "test:rust": "cargo test --manifest-path ../compiler/Cargo.toml"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}

@@ -1,0 +1,13 @@
+target/
+node_modules/
+dist/
+web/public/pkg/
+*.wasm
+.DS_Store
+.playwright-mcp/
+
+# Private working notes, kept local
+IMPLEMENTATION_GUIDE.md
+web/PRODUCT.md
+web/DESIGN.md
+.impeccable/

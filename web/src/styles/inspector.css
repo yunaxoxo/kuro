@@ -1,0 +1,261 @@
+.inspect-grid {
+  flex: 1 1 0;
+  min-height: 12rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 2.6vw, 40px);
+}
+.inspect-grid-tree { grid-template-columns: minmax(17rem, 0.8fr) minmax(0, 1.2fr); }
+.scroll.scroll-y { overflow-x: hidden; }
+.inspect-col { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; container-type: inline-size; }
+/* Every column title sits in the same 28px band, so Tokens and Syntax Tree share one baseline whether or not actions sit beside them. */
+.inspect-head, .inspect-col > .inspect-title { display: flex; align-items: center; min-height: 1.75rem; }
+.inspect-head { justify-content: space-between; gap: 12px; }
+.inspect-title { font-family: var(--font-data); font-size: var(--fs-label); font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--label); }
+.inspect-count { font-variant-numeric: tabular-nums; color: var(--ink); margin-left: 8px; }
+.inspect-empty { color: var(--label); max-width: 56ch; }
+.inspect-error { color: var(--signal); overflow-wrap: anywhere; }
+
+.text-actions { display: flex; gap: 14px; }
+.text-action {
+  font-family: var(--font-data); /* these sit in mono strips (the tree head, the editor strip): one face per strip */
+  padding: 4px 0;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--silver); /* Label read as disabled beside the ink headings */
+  transition: color var(--morph);
+}
+@media (hover: hover) and (pointer: fine) {
+  .text-action:hover:not(:disabled) { color: var(--ink); }
+}
+.text-action:disabled { opacity: 0.4; cursor: default; }
+
+.scroll { flex: 1; min-height: 0; overflow: auto; margin-top: 4px; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* ---- tokens: flat rows ------------------------------------------------------- */
+.tokens { font-family: var(--font-data); font-size: var(--fs-label); font-variant-numeric: tabular-nums; }
+.tok-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.75rem 6.5rem minmax(0, 1fr);
+  align-items: center;
+  height: var(--row-h);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--row-rule);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--morph);
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--row-h);
+}
+.tok-row > span { overflow: hidden; text-overflow: ellipsis; }
+.tok-pos { color: var(--stone); }
+.tok-kind { color: var(--silver); }
+.lexeme { color: var(--ink); }
+.lexeme[data-same] { color: var(--stone); } /* a keyword's text only repeats its kind */
+.tok-row:focus-visible { outline-offset: -2px; }
+.tok-row[data-selected] { background: var(--focus-wash); }
+.tok-row[data-match] .tok-kind { color: var(--ink); }
+.tok-row[data-caret]::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .tok-row:hover { background: var(--wash); }
+}
+
+/* ---- syntax tree: flat 26px rows ---------------------------------------------- */
+.tree { font-family: var(--font-data); font-size: var(--fs-label); font-variant-numeric: tabular-nums; }
+/* A row too narrow for its type and span (deep indent, narrow pane) wraps that column onto a second line the fixed height
+   hides: it leaves whole, never cut mid-character, and the name keeps at least 14ch before it ellipsises. */
+.trow {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  overflow: hidden;
+  position: relative; /* the caret bar */
+  height: var(--row-h);
+  border-bottom: 1px solid var(--row-rule);
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--row-h);
+  cursor: pointer;
+  transition: background-color var(--morph);
+}
+.trow:focus-visible { outline-offset: -2px; }
+.trow[data-selected] { background: var(--focus-wash); }
+.trow[data-caret] { background: var(--wash); }
+.trow[data-caret]::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .trow:hover { background: var(--wash); }
+}
+.tri-slot { flex: none; display: grid; place-items: center; width: 1.5rem; height: calc(var(--row-h) - 1px); }
+.tri { width: 1.5rem; height: var(--row-h); display: grid; place-items: center; cursor: pointer; }
+.tri::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--stone);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transition: transform var(--morph);
+}
+.tri[data-open]::before { transform: rotate(90deg); }
+/* A block, not a flex row, so a name that runs out of room ends in an ellipsis instead of a clean cut. */
+.t-main { display: block; flex: 1 1 0; min-width: min(14ch, 100%); line-height: calc(var(--row-h) - 1px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-main > span + span { margin-left: 8px; }
+.t-field { color: var(--stone); }
+.t-kind { color: var(--ink); font-weight: 500; }
+.t-val { color: var(--silver); }
+.t-rail { flex: none; display: grid; grid-template-columns: 11ch 13ch; align-items: baseline; line-height: calc(var(--row-h) - 1px); column-gap: 14px; padding: 0 8px 0 12px; font-size: var(--fs-label); color: var(--stone); white-space: nowrap; }
+.t-type { grid-column: 1; text-align: right; }
+/* Filtering keeps deep paths: names take the span column's room. */
+.tree[data-filtered] .t-rail, .tree[data-stale] .t-rail { grid-template-columns: 11ch; }
+.tree[data-stale] .t-span { display: none; } /* positions index the original sample while edits go uncompiled */
+.tokens[data-stale] .tok-row { grid-template-columns: 6.5rem minmax(0, 1fr); }
+.tokens[data-stale] .tok-pos { display: none; }
+/* The columns give way by width, whole, never clipped: the span first, then the type; the name keeps the rest. */
+@container (max-width: 30rem) {
+  .t-rail { grid-template-columns: 11ch; }
+  .t-span { display: none; }
+}
+@container (max-width: 18rem) {
+  .t-rail { display: none; }
+}
+.tree[data-filtered] .t-span { display: none; }
+.t-span { grid-column: 2; text-align: right; }
+
+/* ---- bytes ------------------------------------------------------------------ */
+.sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 4px 18px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.sections-size { color: var(--label); font-family: var(--font-data); font-variant-numeric: tabular-nums; margin-left: 4px; }
+.sections .num { color: var(--label); margin-right: 4px; }
+/* A section jumps to its bytes in the dump. */
+.section-jump { display: inline-block; line-height: 1.5rem; margin-left: -4px; padding: 0 4px; transition: background-color var(--morph); }
+.section-jump[aria-pressed="true"] { background: var(--active-wash); }
+@media (hover: hover) and (pointer: fine) {
+  .section-jump:hover { background: var(--wash); }
+}
+
+.hexdump { font-family: var(--font-data); font-size: var(--fs-label); line-height: 1.5rem; font-variant-numeric: tabular-nums; }
+.hex-row { display: flex; align-items: baseline; gap: 20px; content-visibility: auto; contain-intrinsic-size: auto 1.5rem; }
+.hex-off { flex: none; color: var(--label); transition: color var(--morph); }
+.hex-row[data-hot] .hex-off { color: var(--ink); }
+.hex-bytes { display: inline-flex; white-space: nowrap; }
+.b { padding: 0 4px; color: var(--byte); transition: color var(--morph), background-color var(--morph); }
+.b-head { color: var(--ink); }
+.b[data-gap] { margin-left: 16px; }
+.b[data-lit] { background: var(--ink); color: var(--bg); }
+
+/* ---- instructions ----------------------------------------------------------- */
+.fn { margin-bottom: 20px; }
+.fn-head { font-family: var(--font-data); font-size: var(--fs-label); font-weight: 500; color: var(--ink); line-height: 1.5rem; }
+.fn-kw { color: var(--label); font-weight: 400; }
+.fn-sig { margin-left: 4px; color: var(--label); font-weight: 400; }
+.fn-locals { font-family: var(--font-data); font-size: var(--fs-label); color: var(--label); }
+.instrs { font-family: var(--font-data); font-size: var(--fs-label); line-height: 1.5rem; font-variant-numeric: tabular-nums; }
+.instrs li { white-space: nowrap; content-visibility: auto; contain-intrinsic-size: auto 1.5rem; }
+.instr {
+  display: flex;
+  gap: 14px;
+  padding: 0 8px 0 0;
+  text-align: left;
+  transition: background-color var(--morph);
+}
+.instr-at { color: var(--label); }
+.instr-text { color: var(--ink); }
+.instr[aria-pressed="true"] { background: var(--active-wash); }
+.instr[aria-pressed="true"] .instr-at { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .instr:hover { background: var(--wash); }
+}
+
+@media (max-width: 1180px) {
+  .inspect-grid, .inspect-grid-tree { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(10rem, 1fr)); gap: 16px; min-height: 22rem; }
+}
+
+/* ---- filter bar ---------------------------------------------------------------- */
+.filter {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 32px;
+  border-bottom: 1px solid var(--hairline);
+  transition: border-color var(--morph);
+}
+.filter:focus-within { border-bottom-color: var(--ink); }
+.filter-label {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: var(--fs-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--label);
+}
+.filter-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  border-radius: 0;
+  color: var(--ink);
+  caret-color: var(--ink);
+  font-family: var(--font-data);
+  font-size: var(--fs-label);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.filter-input::placeholder { color: var(--stone); opacity: 1; }
+.filter-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.filter-key { flex: none; font-size: var(--fs-label); color: var(--stone); }
+@media (pointer: coarse), (max-width: 767px) {
+  .filter-key { display: none; } /* no keyboard to press it with */
+}
+
+/* Matches stay in full ink; the path down to them recedes. */
+.trow[data-match] { background: var(--wash); }
+.trow[data-match] .t-val { color: var(--ink); }
+/* The path recedes by colour, not opacity, so every text tier keeps 4.5:1. */
+.trow[data-trail] .t-kind { color: var(--label); font-weight: 400; }
+.trow[data-trail] .t-val { color: var(--label); }
+
+/* Function headers jump to their declaration. */
+.fn-jump { display: inline-flex; gap: 0; align-items: baseline; padding: 0 8px 0 0; text-align: left; font: inherit; color: inherit; transition: background-color var(--morph); }
+.fn-jump .fn-kw, .fn-jump .fn-name, .fn-jump .fn-sig { margin-right: 0; }
+.fn-jump > span + span { margin-left: 0.6em; }
+@media (hover: hover) and (pointer: fine) {
+  .fn-jump:hover { background: var(--wash); }
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .tokens, .tree { --row-h: var(--hit); } /* tappable rows (click to source) and the tree toggles, 44px on touch */
+  .instr { min-height: var(--hit); align-items: center; }
+  .fn-jump { min-height: var(--hit); }
+}
+
+/* ---- forced colors (Windows High Contrast) ------------------------------------------
+   Every mark that carries data here is a background, and forced colors repaint backgrounds to Canvas. Opt those marks
+   out and draw them in system colours: CanvasText for data, Highlight for what was just written or is in focus,
+   GrayText for what recedes. Last in the cascade on purpose. */
+@media (forced-colors: active) {
+  .stem, .axis, .peak, .cursor, .cell[data-divider]::before,
+  .rail, .rail-done, .mark,
+  .tab::after, .sample::after,
+  .row[data-step]::before, .row[data-error]::before, .tok-row[data-caret]::before, .trow[data-caret]::before,
+  .b[data-lit], .hl, .pulse, .mark-logo { forced-color-adjust: none; }
+
+  .stem { background: CanvasText; }
+  .cell[data-changed] .stem, .cursor { background: Highlight; }
+  .axis, .rail, .cell[data-divider]::before, .peak { background: GrayText; }
+  .rail-done, .mark[data-past] { background: CanvasText; }
+  .mark { background: GrayText; }
+  .mark[data-current], .mark[data-hover] { background: Highlight; }
+  .tab, .sample { appearance: none; } /* native button painting drops ::after in forced colors */
+  .tab::after, .sample::after { height: 3px; background: Highlight; } /* 1px would sit unseen on the CanvasText rule */
+  .row[data-step]::before, .tok-row[data-caret]::before, .trow[data-caret]::before { background: CanvasText; }
+  .row[data-error]::before { background: Highlight; }
+  .b[data-lit], .hl, .pulse { background: Highlight; color: HighlightText; }
+  .tok-row[data-selected], .trow[data-selected], .instr[aria-pressed="true"] { outline: 1px solid Highlight; outline-offset: -1px; }
+  .mark-logo path { fill: CanvasText !important; } /* the fills are inline styles */
+  .mark-logo rect { fill: Highlight !important; }
+}

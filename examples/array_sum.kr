@@ -1,0 +1,31 @@
+// Array Sum.
+//
+// Fills an int[] with the first six square numbers, then adds them up.
+//
+// `alloc(n)` reserves an n-element array in WebAssembly linear memory and
+// returns it. After running, open the Memory tab: the bump pointer lives at
+// address 0x00, the array's length header (6) at 0x08, and the elements
+// follow at 0x0C, 0x10, 0x14, ...
+
+fn sum(a: int[]) -> int {
+    let total = 0;
+    let i = 0;
+    while i < len(a) {
+        total = total + a[i];
+        i = i + 1;
+    }
+    return total;
+}
+
+fn main() -> int {
+    let squares: int[] = alloc(6);
+    let i = 0;
+    while i < len(squares) {
+        squares[i] = (i + 1) * (i + 1);
+        print_int(squares[i]);
+        i = i + 1;
+    }
+    let total = sum(squares);
+    print_int(total);
+    return total;
+}
