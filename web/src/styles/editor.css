@@ -88,6 +88,8 @@
   tab-size: 4;
 }
 /* A hairline, not a box: the editor is the one framed thing in an unboxed space, so its ring stays quiet (5.7:1). */
+/* The textarea's text is transparent over the highlighted rows; an inverted block would erase the colours, so select with a wash. */
+.editor-input::selection { background: var(--select-wash); color: transparent; }
 .editor:has(.editor-input:focus-visible) { outline: 1px solid var(--label); outline-offset: 4px; }
 /* Scrollbars surface on hover or while typing, so idle thumbs never read as stray hairlines beside the code. */
 @supports selector(::-webkit-scrollbar) {

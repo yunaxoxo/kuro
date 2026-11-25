@@ -24,6 +24,7 @@
   --btn-bg: #141417;
   --btn-hover: #1d1d22;
   --wash: rgb(240 239 234 / 0.045); /* active-line band */
+  --select-wash: rgb(240 239 234 / 0.16); /* editor selection: the highlighted code shows through it */
 
   --font-code: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-data: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;

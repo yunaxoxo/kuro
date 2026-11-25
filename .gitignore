@@ -8,6 +8,7 @@ web/public/pkg/
 
 # Private working notes, kept local
 IMPLEMENTATION_GUIDE.md
+CLAUDE.md
 web/PRODUCT.md
 web/DESIGN.md
 .impeccable/
