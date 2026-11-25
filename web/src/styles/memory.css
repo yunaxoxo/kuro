@@ -58,6 +58,16 @@
 .swatch-tick { width: 1px; height: 12px; background: var(--label); }
 
 /* The step in words, one line: what the scrubber shows as numbers. Full text in the tooltip and to screen readers. */
+.narration-next { color: var(--label); }
+/* The last step: the sentence that closes the run takes full ink; the invitation after it stays quiet. */
+.memory[data-final] .narration { color: var(--ink); }
+.memory[data-final] .readout-step { font-weight: 500; }
+@media (pointer: coarse) {
+  .key-hint { display: none; } /* no arrow keys to press */
+}
+@media (max-width: 767px) {
+  .narration-next { display: none; } /* the view tabs sit right above; the invitation would only be cut off */
+}
 .narration {
   margin-top: -6px;
   font-family: var(--font-ui);
@@ -80,6 +90,10 @@
 
 /* A program that never writes memory: one quiet line, same height, so switching samples never makes the layout jump. */
 .plot-empty { display: grid; place-items: center; padding: 0 1rem; }
+.plot-note .plot-link { display: inline; padding: 0; font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit; color: var(--silver); text-decoration: underline; text-decoration-color: var(--stone); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .plot-link:hover { color: var(--ink); }
+}
 .plot-note { max-width: 40ch; font-family: var(--font-ui); font-size: var(--fs-label); line-height: 1.5; color: var(--label); text-align: center; text-wrap: balance; }
 
 .cells {
@@ -347,6 +361,7 @@
 }
 .stdout-lines::-webkit-scrollbar { display: none; }
 .stdout-line {
+  position: relative;
   flex: none;
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
@@ -357,6 +372,9 @@
 /* Not printed yet: an empty slot the width of the value, so the strip fills in as the run goes instead of giving away the end. */
 .stdout-line[data-pending] { color: transparent; background: linear-gradient(var(--line), var(--line)) left bottom / 100% 1px no-repeat; }
 /* The value the current step just printed: an ink rule under it, so the strip reads as a timeline. */
+/* Where one print site ends and another begins (the per-pass counts, then the sorted array): a wider gap and a tick. */
+.stdout-line[data-break] { margin-left: 18px; }
+.stdout-line[data-break]::before { content: ""; position: absolute; left: -18px; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: var(--mark); }
 .stdout-line[data-latest] { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 
 @media (max-width: 1023px) {

@@ -1,5 +1,5 @@
 import { memo, useLayoutEffect, useMemo, useRef } from "react";
-import { cellAddress } from "../lib/format";
+import { cellAddress, cellValue } from "../lib/format";
 import { RESERVED_CELLS, stepLabel } from "../lib/step";
 import type { TraceStep } from "../trace/types";
 
@@ -13,6 +13,8 @@ interface Props {
   playing: boolean;
   /** The whole trace never writes memory: show a message in place of the stems. */
   silent: boolean;
+  /** Open the WASM Bytecode view (the empty state points a program with no heap writes there). */
+  onBytecode: () => void;
 }
 
 /** Slot name under an address: the runtime slots by name, the first array's elements by index. */
@@ -25,7 +27,7 @@ function slotName(cells: number[], i: number): string {
   return allocated && element < (cells[2] ?? 0) ? `[${element}]` : "";
 }
 
-export const Memory = memo(function Memory({ step, previous, index, count, hasErrors, playing, silent }: Props) {
+export const Memory = memo(function Memory({ step, previous, index, count, hasErrors, playing, silent, onBytecode }: Props) {
   const cells = step?.memory_i32 ?? [];
   const mutated = useMemo(() => new Set(step?.mutated_indices ?? []), [step]);
   const plot = useRef<HTMLDivElement>(null);
@@ -48,13 +50,15 @@ export const Memory = memo(function Memory({ step, previous, index, count, hasEr
     return Math.max(...(data.length ? data : cells.map(Math.abs)), 1);
   }, [cells]);
 
-  const written = cells.flatMap((value, i) => (mutated.has(i) ? [`${cellAddress(i)} = ${value}`] : []));
+  const written = cells.flatMap((value, i) => (mutated.has(i) ? [`${cellAddress(i)} = ${cellValue(i, value)}`] : []));
+  // The last step of a run: the sentence that closes it gets full ink and an invitation to what to look at next.
+  const finished = !!step && count > 1 && index === count - 1;
   const summary = step
     ? `Linear memory after step ${index + 1} of ${count}, ${cells.length} cells.${written.length ? ` Written: ${written.join(", ")}.` : " Nothing written."}`
     : "No memory snapshot";
 
   return (
-    <section className="memory" aria-label="Linear memory">
+    <section className="memory" aria-label="Linear memory" data-final={finished || undefined}>
       <header className="readout">
         <h2 className="readout-title">Memory · Int32</h2>
         <p className="readout-step">
@@ -64,11 +68,22 @@ export const Memory = memo(function Memory({ step, previous, index, count, hasEr
       {/* What the step did, in words: visible for everyone, announced only when playback is paused or stepped by hand. */}
       <p className="narration" aria-live={playing ? "off" : "polite"} title={step?.narration}>
         {step?.narration || "\u00a0"}
+        {finished && (
+          <span className="narration-next">
+            <span className="key-hint"> · ← steps back</span> · 02 and 03 show how it was built
+          </span>
+        )}
       </p>
 
       {silent ? (
         <div className="plot plot-empty">
-          <p className="plot-note">No heap writes. This program never allocates.</p>
+          <p className="plot-note">
+            No heap writes. This program never allocates. Follow it in STDOUT below, or read its instructions in{" "}
+            <button type="button" className="text-action plot-link" onClick={onBytecode}>
+              03 WASM Bytecode
+            </button>
+            .
+          </p>
         </div>
       ) : (
         <div className="plot" ref={plot} role="img" aria-label={summary} translate="no">
@@ -91,13 +106,13 @@ export const Memory = memo(function Memory({ step, previous, index, count, hasEr
                   data-changed={changed || undefined}
                   data-reserved={i < RESERVED_CELLS || undefined}
                   data-divider={i === RESERVED_CELLS || undefined}
-                  title={`${cellAddress(i)} = ${value}${changed ? ` (was ${before})` : ""}`}
+                  title={`${cellAddress(i)} = ${cellValue(i, value)}${changed ? ` (was ${cellValue(i, before)})` : ""}`}
                 >
                   <div className="track">
                     <i className="cursor" />
                     <i className="peak" />
                     <i className="stem" />
-                    <span className="value">{value}</span>
+                    <span className="value">{cellValue(i, value)}</span>
                   </div>
                   <span className="addr">{cellAddress(i)}</span>
                   <span className="role">{slotName(cells, i) || "\u00a0"}</span>

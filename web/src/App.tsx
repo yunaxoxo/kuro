@@ -39,6 +39,8 @@ export function App() {
   // A recorded trace is standing in for edited code (the only warning a recorded trace carries). Its positions index
   // the original sample, not this text, so nothing may link the two: no painted spans, no step line, no jumps.
   const ignoredEdits = trace?.mode === "mock" && trace.diagnostics.some((d) => d.severity === "warning");
+  // The compiler is absent (a recorded run is on screen) and the source differs from the sample: Run can only replay.
+  const replayOnly = wb.edited && trace?.mode === "mock";
 
   // On a phone only one pane is visible, and the result of a run lives in the telemetry pane.
   const run = useCallback(() => {
@@ -154,7 +156,7 @@ export function App() {
       <a className="skip" href="#workspace">
         Skip to Workspace
       </a>
-      <Header wb={wb} onRun={run} />
+      <Header wb={wb} onRun={run} replayOnly={replayOnly} />
 
       <div className="pane-switch" role="group" aria-label="Workspace">
         <button type="button" className="tab" aria-pressed={pane === "editor"} onClick={() => setPane("editor")}>
@@ -172,7 +174,7 @@ export function App() {
             <span className="pane-meta">
               {wb.edited && (
                 <>
-                  <span className="pane-edited">Edited</span>
+                  <span className="pane-edited">Edited{replayOnly ? " · won't compile" : ""}</span>
                   <button
                     type="button"
                     className="text-action pane-revert"
@@ -221,14 +223,16 @@ export function App() {
           </div>
 
           <div className="panel" role="tabpanel" id="view-panel" aria-labelledby={`tab-${wb.tab}`}>
-            {ignoredEdits && (
+            {replayOnly && (
               <p className="recorded-note" key={wb.runs}>
-                Recorded trace of the original {wb.sample.title} · your edits were not compiled, so errors in them won't show
+                {ignoredEdits
+                  ? `Recorded trace of the original ${wb.sample.title} · your edits were not compiled, so errors in them won't show`
+                  : `Edits aren't compiled in this build · Run replays the recorded ${wb.sample.title}`}
               </p>
             )}
             {wb.tab === "memory" && (
               <>
-                <Memory step={wb.current} previous={wb.previous} index={wb.step} count={stepCount} hasErrors={hasErrors} playing={wb.playing} silent={neverWritesMemory} />
+                <Memory step={wb.current} previous={wb.previous} index={wb.step} count={stepCount} hasErrors={hasErrors} playing={wb.playing} silent={neverWritesMemory} onBytecode={() => setTab("bytecode")} />
                 <Scrubber steps={trace?.steps ?? []} step={wb.step} playing={wb.playing} onStep={wb.setStep} onPause={wb.pause} onToggle={wb.togglePlay} />
               </>
             )}

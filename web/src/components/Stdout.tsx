@@ -1,11 +1,12 @@
 import { memo, useLayoutEffect, useRef } from "react";
-import { printedThrough, stdoutLines } from "../lib/stdout";
+import { printedThrough, printSites, stdoutLines } from "../lib/stdout";
 import type { ExecutionTrace } from "../trace/types";
 
 export const Stdout = memo(function Stdout({ trace, step }: { trace: ExecutionTrace | null; step: number }) {
   const strip = useRef<HTMLOListElement>(null);
   const lines = trace ? stdoutLines(trace) : [];
   const shown = trace ? printedThrough(trace, step) : 0;
+  const sites = trace ? printSites(trace) : [];
 
   useLayoutEffect(() => {
     const el = strip.current;
@@ -33,7 +34,14 @@ export const Stdout = memo(function Stdout({ trace, step }: { trace: ExecutionTr
       {lines.length > 0 && (
         <ol className="stdout-lines" ref={strip} aria-label="Program output">
           {lines.map((line, i) => (
-            <li key={i} className="stdout-line" data-pending={i >= shown || undefined} data-latest={i === shown - 1 || undefined} aria-hidden={i >= shown || undefined}>
+            <li
+              key={i}
+              className="stdout-line"
+              data-pending={i >= shown || undefined}
+              data-latest={i === shown - 1 || undefined}
+              data-break={(i > 0 && sites.length === lines.length && sites[i] !== sites[i - 1]) || undefined}
+              aria-hidden={i >= shown || undefined}
+            >
               {line}
             </li>
           ))}

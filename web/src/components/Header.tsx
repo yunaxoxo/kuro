@@ -2,7 +2,7 @@ import type { Workbench } from "../hooks/useWorkbench";
 import { isMac } from "../lib/format";
 import { Mark } from "./Mark";
 
-export function Header({ wb, onRun }: { wb: Workbench; onRun: () => void }) {
+export function Header({ wb, onRun, replayOnly }: { wb: Workbench; onRun: () => void; replayOnly: boolean }) {
   const shortcut = isMac() ? "⌘↵" : "Ctrl↵";
   const mode = wb.trace?.mode ?? null;
   return (
@@ -43,7 +43,14 @@ export function Header({ wb, onRun }: { wb: Workbench; onRun: () => void }) {
       </nav>
 
       <div className="run-zone">
-        <button type="button" className="run" onClick={onRun} aria-busy={wb.busy} aria-keyshortcuts="Control+Enter Meta+Enter">
+        <button
+          type="button"
+          className="run"
+          onClick={onRun}
+          aria-busy={wb.busy}
+          aria-keyshortcuts="Control+Enter Meta+Enter"
+          title={replayOnly ? "Your edits can't be compiled in this build: this replays the recorded run" : undefined}
+        >
           {/* One inline run, so the sans label and the mono keycap sit on one baseline. */}
           <span className="run-label">
             <span className="run-full">Compile &amp; Run</span>

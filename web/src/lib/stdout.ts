@@ -12,3 +12,8 @@ export function printedThrough(trace: ExecutionTrace, index: number): number {
   for (let i = 0; i <= index && i < trace.steps.length; i++) if (/^call print\w*\(/.test(trace.steps[i].op)) count++;
   return count;
 }
+
+/** The source line each output line was printed from, in order: where one print site ends and another begins marks a group. */
+export function printSites(trace: ExecutionTrace): number[] {
+  return trace.steps.filter((s) => /^call print\w*\(/.test(s.op)).map((s) => s.pc);
+}

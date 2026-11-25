@@ -22,6 +22,9 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
   const exit = useRef<HTMLSpanElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [caretLine, setCaretLine] = useState(0);
+  const [selecting, setSelecting] = useState(false);
+  /** More code lies to the right of the visible part: an edge fade says the lines continue. */
+  const [more, setMore] = useState(false);
 
   const lines = useMemo(() => source.split("\n"), [source]);
   const widest = useMemo(() => lines.reduce((max, l) => Math.max(max, l.length), 0), [lines]);
@@ -60,8 +63,22 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
     const el = area.current;
     if (!el) return;
     setCaretLine(el.value.slice(0, el.selectionStart).split("\n").length);
+    setSelecting(el.selectionStart !== el.selectionEnd);
     onCaret?.(el.selectionStart);
   };
+
+  const measure = () => {
+    const box = scroller.current;
+    if (box) setMore(box.scrollWidth - box.clientWidth - box.scrollLeft > 1);
+  };
+  useLayoutEffect(measure, [source]);
+  useEffect(() => {
+    const box = scroller.current;
+    if (!box) return;
+    const watch = new ResizeObserver(measure);
+    watch.observe(box);
+    return () => watch.disconnect();
+  }, []);
 
   // Keep the line the trace is on in view.
   useLayoutEffect(() => {
@@ -128,58 +145,61 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
   };
 
   return (
-    <div className="editor" translate="no" ref={scroller} style={{ "--cols": Math.max(widest + 2, 40), "--rows": lines.length } as React.CSSProperties}>
-      <div className="editor-sheet">
-        <div className="editor-lines" aria-hidden="true">
-          {lines.map((text, i) => {
-            const no = i + 1;
-            return (
-              <div
-                key={no}
-                className="row"
-                data-line={no}
-                data-caret={no === caretLine || undefined}
-                data-step={no === stepLine || undefined}
-                data-error={errorLines.has(no) || undefined}
-              >
-                <span className="no">{no}</span>
-                <span className="code">
-                  {paint(text, i).map((span, j) => (
-                    <span key={j} className={`tok-${span.cls}${span.hl ? " hl" : ""}${span.pulse ? " pulse" : ""}${span.err ? " err" : ""}`}>
-                      {span.text}
-                    </span>
-                  ))}
-                  {text === "" && "​"}
-                </span>
-              </div>
-            );
-          })}
+    <div className="editor-wrap" data-more={more || undefined} data-selecting={selecting || undefined}>
+      <div className="editor" translate="no" ref={scroller} onScroll={measure} style={{ "--cols": Math.max(widest + 2, 40), "--rows": lines.length } as React.CSSProperties}>
+        <div className="editor-sheet">
+          <div className="editor-lines" aria-hidden="true">
+            {lines.map((text, i) => {
+              const no = i + 1;
+              return (
+                <div
+                  key={no}
+                  className="row"
+                  data-line={no}
+                  data-caret={no === caretLine || undefined}
+                  data-step={no === stepLine || undefined}
+                  data-error={errorLines.has(no) || undefined}
+                >
+                  <span className="no">{no}</span>
+                  <span className="code">
+                    {paint(text, i).map((span, j) => (
+                      <span key={j} className={`tok-${span.cls}${span.hl ? " hl" : ""}${span.pulse ? " pulse" : ""}${span.err ? " err" : ""}`}>
+                        {span.text}
+                      </span>
+                    ))}
+                    {text === "" && "​"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <textarea
+            ref={area}
+            className="editor-input"
+            aria-label="kuro source code"
+            value={source}
+            name="source"
+            autoComplete="off"
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            wrap="off"
+            onChange={(event) => {
+              onChange(event.target.value);
+              syncCaret();
+            }}
+            onKeyDown={onKeyDown}
+            onKeyUp={syncCaret}
+            onClick={syncCaret}
+            onSelect={syncCaret}
+            onBlur={() => setCaretLine(0)}
+          />
+          <span ref={exit} className="editor-exit sr-only" tabIndex={-1}>
+            Left the editor. Tab moves on, Shift Tab returns.
+          </span>
         </div>
-        <textarea
-          ref={area}
-          className="editor-input"
-          aria-label="kuro source code"
-          value={source}
-          name="source"
-          autoComplete="off"
-          spellCheck={false}
-          autoCapitalize="off"
-          autoCorrect="off"
-          wrap="off"
-          onChange={(event) => {
-            onChange(event.target.value);
-            syncCaret();
-          }}
-          onKeyDown={onKeyDown}
-          onKeyUp={syncCaret}
-          onClick={syncCaret}
-          onSelect={syncCaret}
-          onBlur={() => setCaretLine(0)}
-        />
-        <span ref={exit} className="editor-exit sr-only" tabIndex={-1}>
-          Left the editor. Tab moves on, Shift Tab returns.
-        </span>
       </div>
+    <i className="editor-more" aria-hidden="true" />
     </div>
   );
 });

@@ -237,6 +237,9 @@ body::after {
   font-size: var(--fs-label);
 }
 .skip:focus { top: 8px; }
+@media (pointer: coarse) {
+  .skip { display: inline-flex; align-items: center; min-height: var(--hit); }
+}
 #workspace:focus { outline: none; }
 
 /* Focused rows must never sit under a pane edge. */

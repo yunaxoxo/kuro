@@ -1,6 +1,23 @@
+/* The frame owns the flex slot; the scroller fills it, and an edge fade over it says the lines continue to the right. */
+.editor-wrap { position: relative; flex: 1; min-height: 240px; display: flex; flex-direction: column; }
+.editor-more {
+  position: absolute;
+  top: 0;
+  right: 8px; /* clear of the scrollbar track */
+  bottom: 8px;
+  width: 40px;
+  background: linear-gradient(to right, transparent, var(--bg));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--morph);
+}
+.editor-wrap[data-more] .editor-more { opacity: 1; }
+/* A selection is the focus: the caret-line band would only muddy it. */
+.editor-wrap[data-selecting] .row[data-caret] { background: none; }
+
 .editor {
   flex: 1;
-  min-height: 240px;
+  min-height: 0;
   overflow: auto;
   font-family: var(--font-code);
   font-size: var(--code-size);
@@ -129,5 +146,5 @@
 .err { text-decoration: underline; text-decoration-color: var(--signal); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 
 @media (max-width: 1023px) {
-  .editor { min-height: 0; }
+  .editor-wrap { min-height: 0; }
 }

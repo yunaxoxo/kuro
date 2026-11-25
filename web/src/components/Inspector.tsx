@@ -218,12 +218,12 @@ export function TokensAst({ trace, source, highlight, onPick, onHover, caret, fi
             <h2 className="inspect-title">
               Syntax Tree {q && <span className="inspect-count">{matches.size}</span>}
             </h2>
-            {root && (
+            {root && !q && (
               <div className="text-actions">
-                <button type="button" className="text-action" disabled={!!q || allIds.every((id) => open.has(id))} onClick={() => setOpen(new Set(allIds))}>
+                <button type="button" className="text-action" disabled={allIds.every((id) => open.has(id))} onClick={() => setOpen(new Set(allIds))}>
                   Expand All
                 </button>
-                <button type="button" className="text-action" disabled={!!q || open.size <= 1} onClick={() => setOpen(new Set([root.id]))}>
+                <button type="button" className="text-action" disabled={open.size <= 1} onClick={() => setOpen(new Set([root.id]))}>
                   Collapse All
                 </button>
               </div>

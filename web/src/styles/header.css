@@ -36,9 +36,6 @@
   white-space: nowrap;
 }
 .tagline::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 14px; margin-top: -7px; background: var(--hairline); }
-@media (max-width: 1279px) {
-  .tagline { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
-}
 
 .mark-logo { flex: none; display: block; width: max(14px, round(down, 0.875em, 14px)); height: auto; } /* the svg box is the mark's ink: its dots sit on the text baseline, the first one on the pane edge. It follows text size in whole multiples of its 14px grid (28px at 200%), so every pixel stays square. */
 
@@ -148,10 +145,14 @@
   .run-zone { grid-column: 3; }
 }
 
-/* Phones: the short tagline, so a cold visitor still learns what this is; the full one stays for screen readers. */
+/* Below 1280 the short form takes over, so a cold visitor still learns what this is; the full one stays for screen readers.
+   It gives way only where the header has no room: a phone narrower than 380, a phone on its side, and the 768 to 959
+   tablets, where the brand, the three samples and Run already fill the row. */
 .tagline-short { display: none; }
-@media (max-width: 767px) and (min-width: 380px) and (min-height: 561px) {
-  .tagline { position: relative; width: auto; height: auto; margin: 0; padding-left: 12px; overflow: visible; clip-path: none; }
+@media (max-width: 1279px) {
   .tagline-full { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
   .tagline-short { display: inline; }
+}
+@media (max-width: 379px), (max-width: 767px) and (max-height: 560px), (min-width: 768px) and (max-width: 959px) {
+  .tagline { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 }
