@@ -32,17 +32,25 @@ export const Memory = memo(function Memory({ step, previous, index, count, hasEr
   const mutated = useMemo(() => new Set(step?.mutated_indices ?? []), [step]);
   const plot = useRef<HTMLDivElement>(null);
 
-  // When the plot is wider than its pane (phones), keep the cell just written in view.
+  // When the plot is wider than its pane (phones), keep the cell just written in view;
+  // the first and last frames open from the start so PTR / RSV / LEN and [0] read in order.
   useLayoutEffect(() => {
     const box = plot.current;
+    if (box && (index === 0 || index === count - 1)) {
+      box.scrollLeft = 0;
+      return;
+    }
     const written = box ? [...box.querySelectorAll<HTMLElement>(".cell[data-changed]")] : [];
     if (!box || written.length === 0) return;
     // Every cell this step wrote (a swap writes two), from the first one's left edge to the last one's right edge.
     const left = written[0].offsetLeft;
     const right = written[written.length - 1].offsetLeft + written[written.length - 1].offsetWidth;
-    if (right > box.scrollLeft + box.clientWidth) box.scrollLeft = right - box.clientWidth;
-    if (left < box.scrollLeft) box.scrollLeft = left;
-  }, [step]);
+    // Land on a snap point (a cell start one fade in from the left edge), so no fade covers the written cells' labels.
+    const fade = parseFloat(getComputedStyle(box).scrollPaddingLeft) || 0;
+    const w = written[0].offsetWidth;
+    if (right > box.scrollLeft + box.clientWidth - fade) box.scrollLeft = Math.ceil((right - box.clientWidth + 2 * fade) / w) * w - fade;
+    if (left < box.scrollLeft + fade) box.scrollLeft = left - fade;
+  }, [step, index, count]);
 
   // Scale to the array elements; the reserved slots are clamped so they never dwarf the data.
   const scale = useMemo(() => {

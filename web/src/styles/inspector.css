@@ -242,7 +242,8 @@
   .rail, .rail-done, .mark,
   .tab::after, .sample::after,
   .row[data-step]::before, .row[data-error]::before, .tok-row[data-caret]::before, .trow[data-caret]::before,
-  .b[data-lit], .hl, .pulse, .mark-logo { forced-color-adjust: none; }
+  .b[data-lit], .hl, .pulse, .mark-logo,
+  .stdout-line[data-pending], .stdout-line[data-break]::before, .swatch { forced-color-adjust: none; }
 
   .stem { background: CanvasText; }
   .cell[data-changed] .stem, .cursor { background: Highlight; }
@@ -256,6 +257,9 @@
   .row[data-error]::before { background: Highlight; }
   .b[data-lit], .hl, .pulse { background: Highlight; color: HighlightText; }
   .tok-row[data-selected], .trow[data-selected], .instr[aria-pressed="true"] { outline: 1px solid Highlight; outline-offset: -1px; }
+  .stdout-line[data-pending] { color: transparent; background: linear-gradient(GrayText, GrayText) left bottom / 100% 1px no-repeat; } /* unprinted values stay hidden */
+  .stdout-line[data-break]::before, .swatch-tick, .swatch-dim { background: GrayText; }
+  .swatch-peak { background: CanvasText; }
   .mark-logo path { fill: CanvasText !important; } /* the fills are inline styles */
   .mark-logo rect { fill: Highlight !important; }
 }
