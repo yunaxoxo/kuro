@@ -41,6 +41,8 @@ export function App() {
   const ignoredEdits = trace?.mode === "mock" && trace.diagnostics.some((d) => d.severity === "warning");
   // The compiler is absent (a recorded run is on screen) and the source differs from the sample: Run can only replay.
   const replayOnly = wb.edited && trace?.mode === "mock";
+  // Either way the recorded positions index the sample, not the text on screen: unlink from the first keystroke, not from Run.
+  const unlinked = ignoredEdits || replayOnly;
 
   // On a phone only one pane is visible, and the result of a run lives in the telemetry pane.
   const run = useCallback(() => {
@@ -76,11 +78,11 @@ export function App() {
   const { navigate } = wb;
   const goTo = useCallback(
     (target: Highlight) => {
-      if (ignoredEdits) return;
+      if (unlinked) return;
       if (isPhone()) setPane("editor");
       navigate(target);
     },
-    [navigate, ignoredEdits],
+    [navigate, unlinked],
   );
 
 
@@ -174,7 +176,7 @@ export function App() {
             <span className="pane-meta">
               {wb.edited && (
                 <>
-                  <span className="pane-edited">Edited{replayOnly ? " · won't compile" : ""}</span>
+                  <span className="pane-edited">Edited{replayOnly ? " · replay only" : ""}</span>
                   <button
                     type="button"
                     className="text-action pane-revert"
@@ -191,8 +193,8 @@ export function App() {
             source={wb.source}
             onChange={wb.setSource}
             diagnostics={diagnostics}
-            stepLine={wb.tab === "memory" && !ignoredEdits ? (wb.current?.pc ?? 0) : 0}
-            highlight={wb.tab === "memory" || ignoredEdits ? null : wb.hover}
+            stepLine={wb.tab === "memory" && !unlinked ? (wb.current?.pc ?? 0) : 0}
+            highlight={wb.tab === "memory" || unlinked ? null : wb.hover}
             nav={wb.nav}
             onCaret={wb.setCaret}
           />
@@ -236,7 +238,7 @@ export function App() {
                 <Scrubber steps={trace?.steps ?? []} step={wb.step} playing={wb.playing} onStep={wb.setStep} onPause={wb.pause} onToggle={wb.togglePlay} />
               </>
             )}
-            {wb.tab === "tokens" && trace && <TokensAst trace={trace} source={wb.source} highlight={wb.highlight} onPick={goTo} onHover={wb.setHover} caret={ignoredEdits ? null : wb.caret} filter={filter} onFilter={setFilter} filterRef={filterRef} stale={ignoredEdits} />}
+            {wb.tab === "tokens" && trace && <TokensAst trace={trace} source={wb.source} highlight={wb.highlight} onPick={goTo} onHover={wb.setHover} caret={unlinked ? null : wb.caret} filter={filter} onFilter={setFilter} filterRef={filterRef} stale={unlinked} />}
             {wb.tab === "bytecode" && trace && <Bytecode trace={trace} source={wb.source} onPick={goTo} onHover={wb.setHover} />}
           </div>
 
@@ -244,7 +246,7 @@ export function App() {
         </section>
       </main>
 
-      <StatusBar source={wb.source} caret={wb.caret} note={trace?.mode === "mock" && !ignoredEdits ? wb.note : null} />
+      <StatusBar source={wb.source} caret={wb.caret} note={trace?.mode === "mock" && !unlinked ? wb.note : null} />
     </div>
   );
 }

@@ -21,6 +21,8 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
   const area = useRef<HTMLTextAreaElement>(null);
   const exit = useRef<HTMLSpanElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
+  /** Tab indents only once the user has typed or pointed here; tabbing through the page must pass by, not edit. */
+  const armed = useRef(false);
   const [caretLine, setCaretLine] = useState(0);
   const [selecting, setSelecting] = useState(false);
   /** More code lies to the right of the visible part: an edge fade says the lines continue. */
@@ -136,7 +138,7 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
     if (event.key === "Escape") {
       // Not blur(): that resets the Tab start point to the top of the page. The marker sits after the textarea, so Tab moves on.
       exit.current?.focus();
-    } else if (event.key === "Tab" && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    } else if (event.key === "Tab" && armed.current && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey) {
       event.preventDefault();
       const el = event.currentTarget;
       el.setRangeText("    ", el.selectionStart, el.selectionEnd, "end");
@@ -185,6 +187,7 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
             autoCorrect="off"
             wrap="off"
             onChange={(event) => {
+              armed.current = true;
               onChange(event.target.value);
               syncCaret();
             }}
@@ -192,7 +195,11 @@ export const Editor = memo(function Editor({ source, onChange, diagnostics, step
             onKeyUp={syncCaret}
             onClick={syncCaret}
             onSelect={syncCaret}
-            onBlur={() => setCaretLine(0)}
+            onPointerDown={() => (armed.current = true)}
+            onBlur={() => {
+              armed.current = false;
+              setCaretLine(0);
+            }}
           />
           <span ref={exit} className="editor-exit sr-only" tabIndex={-1}>
             Left the editor. Tab moves on, Shift Tab returns.
