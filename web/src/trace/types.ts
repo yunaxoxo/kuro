@@ -33,6 +33,17 @@ export interface TraceStep {
   memory_i32: number[];
   /** Indices into `memory_i32` whose value differs from the previous step. */
   mutated_indices: number[];
+  /** Instrumented runs only (§22): the call stack at this step, outermost first, e.g. ["main", "fib(3)"]. */
+  call_stack?: string[];
+  /** Instrumented runs only (§23): operations executed up to and including this step. */
+  gas?: Gas;
+}
+
+export interface Gas {
+  alu: number;
+  load: number;
+  store: number;
+  branch: number;
 }
 
 export interface ExecutionTrace {

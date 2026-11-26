@@ -32,7 +32,7 @@
 .memory { flex: 1 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
 .readout { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 24px; }
-.readout-title, .readout-step {
+.readout-title, .readout-step, .readout-meta {
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-size: var(--fs-label);
@@ -41,6 +41,8 @@
 }
 .readout-title { color: var(--label); letter-spacing: 0.12em; text-transform: uppercase; }
 .readout-step { color: var(--ink); letter-spacing: 0.02em; }
+.readout-meta { color: var(--label); letter-spacing: 0.02em; }
+.readout-meta span { color: var(--ink); }
 /* A recorded trace standing in for edited code: said where the eye is, behind the same hollow datum as "Recorded Run". */
 .recorded-note { flex: none; display: flex; gap: 8px; font-family: var(--font-ui); font-size: var(--fs-label); line-height: 1.5; color: var(--ink); text-wrap: pretty; }
 .recorded-note::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: calc((1.5em - 6px) / 2); border: 1px solid var(--ink); animation: run-landed 360ms var(--ease); } /* centred on the first line */

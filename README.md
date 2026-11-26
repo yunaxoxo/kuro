@@ -1,5 +1,7 @@
 # kuro
 
+**A deterministic WebAssembly compiler and memory-forensics workbench, written in Rust.**
+
 kuro is a small statically typed language whose Rust compiler emits WebAssembly MVP bytecode by hand: no LLVM, no `wasm-encoder`, every byte written by the crate itself. A browser workbench compiles and runs a program, then lets you step through its linear memory, tokens, syntax tree and module bytes.
 
 ![The kuro workbench mid-sort: source on the left, linear memory on the right as labelled Int32 cells, the two cells just swapped in vermilion](docs/workbench.webp)
@@ -12,7 +14,7 @@ source (.kr) ─▶ lexer ─▶ parser ─▶ type checker ─▶ codegen ─�
                          climbing                    memory                           at every print
 ```
 
-**Status.** The shared types, pipeline glue, 139 tests and the workbench are complete. The five compiler stages are typed `todo!()` stubs while they are implemented; until then the workbench replays recorded runs of the sample programs and says so.
+**Status.** The shared types, pipeline glue, 139 tests and the workbench are complete. The five compiler stages are typed `todo!()` stubs while they are implemented; until then the workbench replays recorded runs of the sample programs and says so. The forensics profile below is specified and not built yet.
 
 ## Commands
 
@@ -109,6 +111,32 @@ sequenceDiagram
 | WASM Bytecode | Sections, a hex dump and the disassembly, linked byte for byte. |
 
 `⌘↵` run · `←` `→` step (`Shift` ×5) · `Space` play · `1` `2` `3` views · `⌘F` filter · `Esc` leave the editor. State lives in the URL. It works offline, honours reduced motion, is keyboard-operable throughout and adapts from phones to wide screens.
+
+## Forensics profile (planned)
+
+kuro programs have no clock, no randomness and no input, and they store only `i32` in memory. So a run is fully deterministic, and that makes four tools cheap to build. All four are opt-in. With the default options, the compiler's output stays byte-for-byte the core contract below, so the tests, recorded runs and workbench are unaffected.
+
+| Capability | What you get |
+|---|---|
+| Time-travel event log | An instrumented build reports every store, call, return and branch to one host import. The NDJSON log rebuilds memory and the call stack at any step, forwards or backwards, and answers "which line last wrote this cell?" |
+| Gas counter | Exact per-line counts of ALU ops, loads, stores, branches and calls, with a fixed cost model. These are operation counts, not time, so two implementations compare by the work they do. |
+| Headless CLI | `kuro build`, `kuro check`, `kuro run`, `kuro disasm` and `kuro bench`, behind a `cli` cargo feature, with editor-friendly diagnostics, stable exit codes and byte-identical output. |
+| Heap layout 2 | Arrays carry `cap` and `len` and gain `push`, `pop` and `slice`. `int[,]` tables come from `grid`. Every index is bounds-checked, provably bad literals are rejected at compile time, and any other out-of-range index traps with its source line. |
+
+### CLI & Unix pipeline composition (planned)
+
+```sh
+kuro run sort.kr                                   # stdout: the program's prints, nothing else
+cat sort.kr | kuro run - --json | jq -e '.status == "ok"'          # stdin in, exit status out
+kuro run sort.kr --json --profile | jq '.gas.lines | sort_by(-.gas) | .[:3]'   # hottest lines
+kuro run cases/*.kr --json | jq -c 'select(.status != "ok") | {source, trap}'  # NDJSON batch
+kuro run sort.kr --who-wrote 0x0014                # last write to a cell: line, step, old → new
+kuro bench bubble.kr insertion.kr --n 16,64,256    # counts side by side, empirical growth
+kuro build sort.kr --wat && wasm-tools validate sort.wasm   # .wasm plus annotated .wat
+wasmtime run --preload env=env.wasm --invoke main sort.wasm # core module under plain wasmtime
+```
+
+With `--json`, every input produces exactly one document. Every key is always present, and floats are written as strings, so documents compare byte for byte. Exit codes: `0` ok, `1` compile error, `2` trap, `3` fuel or event limit. `--format quickfix` prints one `file:line:col: error: message` line per problem, so Neovim's `:make` and Zed's terminal jump straight to the error. The `wasmtime` line needs a small hand-written `env` shim. A module imports at most three host functions: `env.print_int`, `env.print_float` and, in instrumented builds, `kuro.event`. The browser, Node and `kuro run` all print values identically.
 
 ## Compiler ↔ workbench contract
 

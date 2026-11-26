@@ -59,6 +59,21 @@ pub struct TraceStep {
     pub memory_i32: Vec<i32>,
     /// Indices into `memory_i32` whose value differs from the previous step.
     pub mutated_indices: Vec<u32>,
+    /// Instrumented runs only: the call stack at this step, outermost first.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub call_stack: Option<Vec<String>>,
+    /// Instrumented runs only: operations executed up to and including this step.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gas: Option<Gas>,
+}
+
+/// Cumulative operation counts of the cost model (IMPLEMENTATION_GUIDE §23).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct Gas {
+    pub alu: u32,
+    pub load: u32,
+    pub store: u32,
+    pub branch: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]

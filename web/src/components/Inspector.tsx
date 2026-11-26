@@ -444,7 +444,7 @@ const InstrList = memo(function InstrList({ dis, decls, pinned, onLight, onPin, 
   );
 });
 
-export const Bytecode = memo(function Bytecode({ trace, source, onPick, onHover }: { trace: ExecutionTrace; source: string; onPick: (next: Highlight) => void; onHover: (next: Highlight | null) => void }) {
+export const Bytecode = memo(function Bytecode({ trace, source, fileName, onPick, onHover }: { trace: ExecutionTrace; source: string; fileName: string; onPick: (next: Highlight) => void; onHover: (next: Highlight | null) => void }) {
   // Each user function in the module has a declaration in the source; the runtime's `alloc` does not.
   const decls = useMemo(() => {
     const tree = buildTree(trace.ast_json, source);
@@ -486,7 +486,10 @@ export const Bytecode = memo(function Bytecode({ trace, source, onPick, onHover 
     }
   }, []);
 
-  if (!dis) return <p className="inspect-empty">No bytecode</p>;
+  if (!dis) {
+    const error = trace.diagnostics.find((d) => d.severity === "error");
+    return <p className="inspect-empty">{error ? `${fileName}:${error.line}:${error.col}: error: ${error.message}` : "No bytecode"}</p>;
+  }
 
   return (
     <div className="inspect-grid" translate="no">

@@ -64,6 +64,17 @@ export const Memory = memo(function Memory({ step, previous, index, count, hasEr
         <p className="readout-step">
           {step ? stepLabel(step) : hasErrors ? "No run" : "…"}
         </p>
+        {/* Only instrumented runs carry these; recorded runs and plain modules show nothing extra. */}
+        {step?.call_stack && (
+          <p className="readout-meta">
+            Stack <span>{step.call_stack.join(" → ")}</span>
+          </p>
+        )}
+        {step?.gas && (
+          <p className="readout-meta">
+            Gas <span>{step.gas.alu + step.gas.branch} ops · {step.gas.load + step.gas.store} mem</span>
+          </p>
+        )}
       </header>
       {/* What the step did, in words: visible for everyone, announced only when playback is paused or stepped by hand. */}
       <p className="narration" aria-live={playing ? "off" : "polite"} title={step?.narration}>

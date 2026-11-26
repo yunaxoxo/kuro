@@ -12,3 +12,7 @@ CLAUDE.md
 web/PRODUCT.md
 web/DESIGN.md
 .impeccable/
+graphify-out/
+
+# generated knowledge graph
+graphify-out/
