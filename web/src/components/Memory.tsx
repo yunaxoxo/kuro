@@ -65,11 +65,11 @@ export const Memory = memo(function Memory({ step, previous, index, count, hasEr
           {step ? stepLabel(step) : hasErrors ? "No run" : "…"}
         </p>
         {/* Only instrumented runs carry these; recorded runs and plain modules show nothing extra. */}
-        {step?.call_stack && (
+        {step?.call_stack?.length ? (
           <p className="readout-meta">
             Stack <span>{step.call_stack.join(" → ")}</span>
           </p>
-        )}
+        ) : null}
         {step?.gas && (
           <p className="readout-meta">
             Gas <span>{step.gas.alu + step.gas.branch} ops · {step.gas.load + step.gas.store} mem</span>

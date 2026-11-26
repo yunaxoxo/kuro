@@ -237,7 +237,7 @@ export function App() {
               </>
             )}
             {wb.tab === "tokens" && trace && <TokensAst trace={trace} source={wb.source} highlight={wb.highlight} onPick={goTo} onHover={wb.setHover} caret={ignoredEdits ? null : wb.caret} filter={filter} onFilter={setFilter} filterRef={filterRef} stale={ignoredEdits} />}
-            {wb.tab === "bytecode" && trace && <Bytecode trace={trace} source={wb.source} fileName={`${wb.sample.id}.kr`} onPick={goTo} onHover={wb.setHover} />}
+            {wb.tab === "bytecode" && trace && <Bytecode trace={trace} source={wb.source} onPick={goTo} onHover={wb.setHover} />}
           </div>
 
           <Stdout trace={trace} step={wb.step} />
