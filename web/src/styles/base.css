@@ -139,8 +139,8 @@ body::after {
 .seg + .seg::before { content: ""; position: absolute; left: 0; top: 6px; width: 1px; height: 14px; background: var(--hairline); }
 .seg-cursor { color: var(--ink); }
 .seg-hints { gap: 18px; }
-.seg-hints kbd { color: var(--ink); margin-right: 4px; font-size: var(--fs-label); }
 .seg-target { margin-left: auto; padding-right: 0; }
+.seg-hints kbd { color: var(--ink); margin-right: 4px; font-size: var(--fs-label); }
 /* While typing, the hints say how to indent and how to get out; elsewhere they say how to drive the trace. */
 .seg-hints-edit { display: none; }
 @media (min-width: 768px) {
@@ -149,11 +149,8 @@ body::after {
 }
 /* Why the output is a replayed sample (the header names the mode): visible, not just a tooltip. Truncates first when the bar runs short. */
 @media (max-width: 1023px) {
-  .statusbar:has(.seg-note) .seg-encoding { display: none; }
   .statusbar:has(.seg-note) .seg-cursor { padding-left: 0; }
   .statusbar:has(.seg-note) .seg-cursor::before { display: none; }
-  .statusbar:has(.seg-note) .seg-encoding + .seg-note { padding-left: 0; }
-  .statusbar:has(.seg-note) .seg-encoding + .seg-note::before { display: none; }
 }
 .seg-note { display: block; min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; line-height: calc(var(--status-h) - 1px); color: var(--ink); }
 
@@ -189,12 +186,10 @@ body::after {
   .tabs::-webkit-scrollbar { display: none; }
   .tabs .tab { flex: none; min-height: var(--hit); display: inline-flex; align-items: center; padding: 0; }
   .zone-data .pane-head { align-items: stretch; }
-  .seg-hints, .seg-encoding { display: none; }
-  /* The reason is the last segment here: it takes the room the build target gives up, up to the edge. */
+  .seg-hints { display: none; }
+  /* The note takes the room the build target gives up. */
   .statusbar:has(.seg-note) .seg-target { display: none; }
   .seg-note { padding-right: 0; }
-  .seg-encoding + .seg-note { padding-left: 0; } /* no cursor yet: the note is the first segment */
-  .seg-encoding + .seg-note::before { display: none; }
   .seg-cursor { padding-left: 0; }
   .seg-cursor::before { display: none; }
 }

@@ -11,13 +11,8 @@ export function Header({ wb, onRun, replayOnly }: { wb: Workbench; onRun: () => 
         <h1 className="wordmark" translate="no">
           <Mark />
           kuro
-          {/* Visible on wide screens so a cold visitor knows what this is; read out everywhere. */}
-          <span className="tagline">
-            <span className="tagline-full">Rust → WebAssembly compiler</span>
-            <span className="tagline-short" aria-hidden="true">
-              Rust → Wasm
-            </span>
-          </span>
+          {/* Shown from 1280 so a cold visitor knows what this is; read out everywhere. */}
+          <span className="tagline">Rust → WebAssembly compiler</span>
         </h1>
         {mode && (
           <span className="brand-mode" data-mode={mode} title={wb.note ?? "Compiled and run by the Rust backend"}>

@@ -145,14 +145,7 @@
   .run-zone { grid-column: 3; }
 }
 
-/* Below 1280 the short form takes over, so a cold visitor still learns what this is; the full one stays for screen readers.
-   It gives way only where the header has no room: a phone narrower than 380, a phone on its side, and the 768 to 959
-   tablets, where the brand, the three samples and Run already fill the row. */
-.tagline-short { display: none; }
+/* Below 1280 the tagline is read out only: the header has no room for it. */
 @media (max-width: 1279px) {
-  .tagline-full { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
-  .tagline-short { display: inline; }
-}
-@media (max-width: 379px), (max-width: 767px) and (max-height: 560px), (min-width: 768px) and (max-width: 959px) {
   .tagline { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 }
